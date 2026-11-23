@@ -15,6 +15,7 @@ import org.owasp.webgoat.container.mailbox.MailboxRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,6 +28,7 @@ public class UserService implements UserDetailsService {
   private final Function<String, Flyway> flywayLessons;
   private final List<Initializable> lessonInitializables;
   private final MailboxRepository mailboxRepository;
+  private final PasswordEncoder passwordEncoder;
 
   @Override
   public WebGoatUser loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -44,7 +46,7 @@ public class UserService implements UserDetailsService {
   public void addUser(String username, String password) {
     // get user if there exists one by the name
     var userAlreadyExists = userRepository.existsByUsername(username);
-    var webGoatUser = userRepository.save(new WebGoatUser(username, password));
+    var webGoatUser = userRepository.save(new WebGoatUser(username, passwordEncoder.encode(password)));
 
     if (!userAlreadyExists) {
       userTrackerRepository.save(
@@ -87,8 +89,8 @@ public class UserService implements UserDetailsService {
    * Resets the password of an existing user.
    *
    * @param username the username whose password should be reset
-   * @param newPassword the new (plain-text) password – stored as-is because WebGoat uses
-   *     {@link org.springframework.security.crypto.password.NoOpPasswordEncoder}
+   * @param newPassword the new plain-text password; it is hashed with the configured {@link
+   *     PasswordEncoder} before being stored
    * @throws UsernameNotFoundException when the user does not exist
    */
   public void resetPassword(String username, String newPassword) {
@@ -96,6 +98,6 @@ public class UserService implements UserDetailsService {
     if (existing == null) {
       throw new UsernameNotFoundException("User not found: " + username);
     }
-    userRepository.save(new WebGoatUser(username, newPassword, existing.getRole()));
+    userRepository.save(new WebGoatUser(username, passwordEncoder.encode(newPassword), existing.getRole()));
   }
 }

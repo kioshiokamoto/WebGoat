@@ -152,9 +152,8 @@ public class AdminController {
    * Resets a user's password to a randomly generated temporary password and returns it in the
    * response body so the administrator can communicate it to the user.
    *
-   * <p>Passwords are stored as plain-text because WebGoat uses {@link
-   * org.springframework.security.crypto.password.NoOpPasswordEncoder}. This is intentional – the
-   * application exists solely to demonstrate vulnerabilities in a controlled environment.
+   * <p>The temporary password is hashed with BCrypt by {@link UserService#resetPassword} before it
+   * is stored; only this response contains it in plain text.
    */
   @PostMapping("/users/{username}/reset-password")
   @PreAuthorize("hasAuthority('WEBGOAT_ADMIN')")

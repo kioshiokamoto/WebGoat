@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.owasp.webgoat.container.mailbox.MailboxRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -27,6 +28,7 @@ class UserServiceTest {
   @Mock private JdbcTemplate jdbcTemplate;
   @Mock private Function<String, Flyway> flywayLessons;
   @Mock private MailboxRepository mailboxRepository;
+  @Mock private PasswordEncoder passwordEncoder;
 
   @Test
   void shouldThrowExceptionWhenUserIsNotFound() {
@@ -38,7 +40,8 @@ class UserServiceTest {
             jdbcTemplate,
             flywayLessons,
             List.of(),
-            mailboxRepository);
+            mailboxRepository,
+            passwordEncoder);
     Assertions.assertThatThrownBy(() -> userService.loadUserByUsername("unknown"))
         .isInstanceOf(UsernameNotFoundException.class);
   }

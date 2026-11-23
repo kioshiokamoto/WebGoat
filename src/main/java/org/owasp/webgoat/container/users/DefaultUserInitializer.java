@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
@@ -28,6 +29,7 @@ public class DefaultUserInitializer implements ApplicationRunner {
 
   private final UserRepository userRepository;
   private final UserService userService;
+  private final PasswordEncoder passwordEncoder;
 
   @Override
   public void run(ApplicationArguments args) {
@@ -36,12 +38,15 @@ public class DefaultUserInitializer implements ApplicationRunner {
       // Always ensure the admin has the correct role AND the known demo password so that
       // the credentials remain predictable after every restart regardless of mid-session resets.
       userRepository.save(
-          new WebGoatUser(ADMIN_USERNAME, DEFAULT_PASSWORD, WebGoatUser.ROLE_ADMIN));
+          new WebGoatUser(
+              ADMIN_USERNAME, passwordEncoder.encode(DEFAULT_PASSWORD), WebGoatUser.ROLE_ADMIN));
       log.info(
           "Ensured '{}' account is WEBGOAT_ADMIN with the default demo password.",
           ADMIN_USERNAME);
     } else {
-      userRepository.save(new WebGoatUser(ADMIN_USERNAME, DEFAULT_PASSWORD, WebGoatUser.ROLE_ADMIN));
+      userRepository.save(
+          new WebGoatUser(
+              ADMIN_USERNAME, passwordEncoder.encode(DEFAULT_PASSWORD), WebGoatUser.ROLE_ADMIN));
       log.info(
           "Created default admin account '{}' with role {}.",
           ADMIN_USERNAME,
