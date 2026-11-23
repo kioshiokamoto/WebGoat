@@ -6,6 +6,7 @@ package org.owasp.webgoat.container.users;
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import org.owasp.webgoat.container.i18n.PluginMessages;
 import org.owasp.webgoat.container.session.Course;
@@ -40,6 +41,7 @@ public class AdminController {
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
   private static final int TEMP_PASSWORD_LENGTH = 12;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+  private static final Pattern VALID_USERNAME = Pattern.compile("[A-Za-z0-9._@-]{1,255}");
 
   private final UserService userService;
   private final UserProgressRepository userProgressRepository;
@@ -152,12 +154,18 @@ public class AdminController {
    * Resets a user's password to a randomly generated temporary password and returns it in the
    * response body so the administrator can communicate it to the user.
    *
+   * <p>Usernames that are longer than the database column or contain characters outside {@code
+   * [A-Za-z0-9._@-]} are rejected with 400 before reaching the service.
+   *
    * <p>The temporary password is hashed with BCrypt by {@link UserService#resetPassword} before it
    * is stored; only this response contains it in plain text.
    */
   @PostMapping("/users/{username}/reset-password")
   @PreAuthorize("hasAuthority('WEBGOAT_ADMIN')")
   public ResponseEntity<PasswordResetResponse> resetPassword(@PathVariable String username) {
+    if (!VALID_USERNAME.matcher(username).matches()) {
+      return ResponseEntity.badRequest().build();
+    }
     String tempPassword = generateTemporaryPassword();
     try {
       userService.resetPassword(username, tempPassword);
